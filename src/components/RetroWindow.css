@@ -1,0 +1,41 @@
+.retro-window {
+  background-color: var(--window-bg);
+  box-shadow: var(--bevel-out);
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+.title-bar {
+  background: var(--title-bar-active);
+  padding: 3px 2px 3px 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title-bar-text {
+  color: var(--title-bar-text);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.window-body {
+  padding: 10px;
+}
+
+/* Add the bevel to our window buttons too! */
+.title-bar-controls button {
+  background-color: var(--window-bg);
+  box-shadow: var(--bevel-out);
+  border: none;
+  font-weight: bold;
+  height: 16px;
+  width: 16px;
+  margin-left: 2px;
+  cursor: pointer;
+}
+
+.title-bar-controls button:active {
+  box-shadow: var(--bevel-in);
+}

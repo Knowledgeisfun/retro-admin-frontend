@@ -1,0 +1,31 @@
+:root {
+  /* The classic 90s OS Palette */
+  --os-bg: #008080; 
+  --window-bg: #c0c0c0; 
+  --title-bar-active: #000080; 
+  --title-bar-text: #ffffff;
+  
+  /* The iconic 3D Bevel Box Shadows */
+  --bevel-out: 
+    inset 1px 1px 0px #ffffff,
+    inset -1px -1px 0px #0a0a0a,
+    inset 2px 2px 0px #dfdfdf,
+    inset -2px -2px 0px #808080;
+    
+  --bevel-in: 
+    inset 1px 1px 0px #0a0a0a,
+    inset -1px -1px 0px #ffffff,
+    inset 2px 2px 0px #808080,
+    inset -2px -2px 0px #dfdfdf;
+
+  font-family: 'MS Sans Serif', 'Arial', sans-serif;
+}
+
+body {
+  background-color: var(--os-bg);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}

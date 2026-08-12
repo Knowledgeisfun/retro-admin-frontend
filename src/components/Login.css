@@ -1,0 +1,85 @@
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group label {
+  font-size: 14px;
+}
+
+/* The sunken 3D effect for input fields */
+.retro-input {
+  background: #ffffff;
+  border: none;
+  /* Inverse bevel for a sunken look */
+  box-shadow: 
+    inset -1px -1px #ffffff, 
+    inset 1px 1px #0a0a0a, 
+    inset -2px -2px #dfdfdf, 
+    inset 2px 2px #808080;
+  padding: 4px;
+  font-family: inherit;
+  outline: none;
+}
+
+.retro-input:focus {
+  background: #000080; /* Classic navy highlight */
+  color: #ffffff;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* The raised 3D effect for buttons */
+.retro-button {
+  background-color: var(--window-bg);
+  border: none;
+  box-shadow: var(--bevel-out);
+  padding: 4px 16px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* The click effect */
+.retro-button:active {
+  box-shadow: var(--bevel-in);
+  /* Slightly shift the text to make the click feel physical */
+  padding: 5px 15px 3px 17px; 
+}
+
+/* Semi-transparent background dimming for the popup */
+.error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.error-dialog-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 13px;
+}
+
+.error-icon {
+  font-size: 24px;
+}
