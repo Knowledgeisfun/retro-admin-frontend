@@ -1,16 +1,31 @@
-# React + Vite
+# iOS Club Manager 4.0 - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A retro-styled Netscape Navigator-themed web interface built with **React** and **Vite**, engineered specifically for managing university club operations, team hierarchies, and secure inter-team communications (developed for club events like Gameflix 4.0).
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Showcased Features & Capabilities
 
-## React Compiler
+- **Retro Netscape Navigator UI**: A nostalgic, windowed 90s browser aesthetic featuring a classic toolbar (`Back`, `Forward`, `Reload`, `Home`), address bar status, and customized session frames.
+- **Granular Role-Based Access Control (RBAC)**: Dynamically evaluates token-encoded permissions to restrict or grant access for **Admins**, **Team Leads**, **Co-Leads**, and **Regular Members**.
+- **Team-Specific Chat Rooms**: Automatically maps and isolates chat channels to specific teams using dynamic **team IDs and team names**, ensuring members only interact within their assigned units.
+- **Secure Leadership Lounge**: Restricted communication rooms locked down exclusively to authorized leads, co-leads, and administrators.
+- **Local Network & Tunnel Deployment**: Pre-configured Vite options (`allowedHosts` and base path resolution) to allow seamless mobile or multi-device testing over local Wi-Fi and secure tunneling tools.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- **Framework**: React (with Vite)
+- **Styling**: Custom CSS mirroring classic 90s browser window layouts
+- **Communication**: REST APIs with polling for real-time messaging updates
+- **Authentication**: JWT-based session handling
+
+---
+
+## ⚙️ Getting Started & Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd club-manager-frontend
