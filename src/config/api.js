@@ -4,4 +4,4 @@
 //export const API_BASE_URL = "https://tired-bushes-divide.loca.lt/api"; 
 
 // If you want to test locally again without tunnels, just swap the comments!
-export const API_BASE_URL = "http://localhost:8080/api";
+export const API_BASE_URL = "club-manager-production-a880.up.railway.app";
