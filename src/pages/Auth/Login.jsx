@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import RetroWindow from './RetroWindow';
-import './Login.css';
+import RetroWindow from '../../components/RetroUI/RetroWindow';
+import { API_BASE_URL } from '../../config/api'; 
+import './Auth.css';
 
 const Login = ({ onLoginSuccess }) => {
-  // 1. Change the state variable from username to email
   const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,7 +12,6 @@ const Login = ({ onLoginSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     
-    // Update validation to check email
     if (!email.trim() || !password.trim()) {
       setError('All fields are required, user!');
       return;
@@ -22,18 +21,20 @@ const Login = ({ onLoginSuccess }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'bypass-tunnel-reminder': 'true'
         },
-        // 2. THIS IS THE CRITICAL FIX: Send 'email' instead of 'username'
         body: JSON.stringify({ email: email, password: password }), 
       });
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('jwt_token', data.token); 
+        
+        // STANDARD KEY: Save under 'token' to align with all other components
+        localStorage.setItem('token', data.token); 
         onLoginSuccess(data.requiresPasswordChange); 
       } else {
         setError('Access Denied: Invalid credentials.');
@@ -48,15 +49,14 @@ const Login = ({ onLoginSuccess }) => {
   return (
     <>
       <form onSubmit={handleLogin} className="login-form">
-        
         <div className="form-group">
           <label htmlFor="email">Email:</label>
           <input 
-            type="email" // You can also change this to type="email" for basic browser format validation
+            type="email" 
             id="email"
             className="retro-input" 
-            value={email} // 3. Update the input value
-            onChange={(e) => setEmail(e.target.value)} // 4. Update the onChange handler
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
           />
         </div>
         
@@ -79,7 +79,6 @@ const Login = ({ onLoginSuccess }) => {
         </div>
       </form>
 
-      {/* THE ACTUAL ERROR DIALOG CODE IS RESTORED HERE */}
       {error && (
         <div className="error-overlay">
           <RetroWindow title="System Error" width="260px">

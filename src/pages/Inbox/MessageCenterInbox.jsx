@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import RetroWindow from './RetroWindow';
-import './Dashboard.css';
-import './Login.css';
+import RetroWindow from '../../components/RetroUI/RetroWindow';
+import { API_BASE_URL } from '../../config/api'; 
+import './Inbox.css';
 
 const MessageCenterInbox = ({ userRole }) => {
   const [announcements, setAnnouncements] = useState([]);
@@ -10,21 +10,42 @@ const MessageCenterInbox = ({ userRole }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
+  // Fallback token extraction to determine admin rights if prop is missing
+  const getUserDataFromToken = () => {
+    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+    if (!token) return {};
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('0' + ('' + c).charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return {};
+    }
+  };
+
+  const userData = getUserDataFromToken();
+  const effectiveRole = userRole || userData.role || '';
+  const isAdmin = effectiveRole.toUpperCase().includes('ADMIN');
+
   useEffect(() => {
     fetchAnnouncements();
   }, []);
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('jwt_token');
+    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'bypass-tunnel-reminder': 'true' 
     };
   };
 
   const fetchAnnouncements = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/announcements', {
+      const response = await fetch(`${API_BASE_URL}/announcements`, {
         method: 'GET',
         headers: getAuthHeader()
       });
@@ -33,22 +54,28 @@ const MessageCenterInbox = ({ userRole }) => {
         setAnnouncements(data);
         if (data.length > 0) setSelectedMail(data[0]);
       } else {
-        const mockData = [
-          { id: 1, title: '🚨 SYSTEM BULLETIN: Welcome to iOS Club 4.0', sender: 'Administrator', date: '2026-08-12', content: 'All members are required to check their assigned team directories and coordinate with their Leads.', pinned: true },
-          { id: 2, title: '📅 Upcoming Event: Hackathon 2026 Briefing', sender: 'Event Team', date: '2026-08-14', content: 'The preliminary synchronization meeting will take place in LC 203.', pinned: false }
-        ];
-        setAnnouncements(mockData);
-        setSelectedMail(mockData[0]);
+        // Fallback mock data if backend endpoint isn't set up yet
+        loadMockAnnouncements();
       }
     } catch (error) {
-      console.error("Failed to fetch announcements", error);
+      console.error("Failed to fetch announcements, loading mock data", error);
+      loadMockAnnouncements();
     }
+  };
+
+  const loadMockAnnouncements = () => {
+    const mockData = [
+      { id: 1, title: '🚨 SYSTEM BULLETIN: Welcome to iOS Club 4.0', sender: 'Administrator', date: '2026-08-12', content: 'All members are required to check their assigned team directories and coordinate with their Leads.', pinned: true },
+      { id: 2, title: '📅 Upcoming Event: Hackathon 2026 Briefing', sender: 'Event Team', date: '2026-08-14', content: 'The preliminary synchronization meeting will take place in LC 203.', pinned: false }
+    ];
+    setAnnouncements(mockData);
+    setSelectedMail(mockData[0]);
   };
 
   const handlePostAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8080/api/announcements', {
+      const response = await fetch(`${API_BASE_URL}/announcements`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: JSON.stringify({ title, content, pinned: true })
@@ -59,15 +86,16 @@ const MessageCenterInbox = ({ userRole }) => {
         setContent('');
         fetchAnnouncements();
       } else {
-        alert("Permission Denied or Server Error.");
+        const errText = await response.text();
+        alert(`Permission Denied or Server Error: ${errText}`);
       }
     } catch (err) {
       console.error("Error posting announcement", err);
+      alert("Network Error: Could not broadcast bulletin.");
     }
   };
 
   return (
-    // REMOVED the duplicate Netscape container header toolbar here!
     <div style={{ display: 'flex', gap: '8px', padding: '10px', height: '100%', overflow: 'hidden' }}>
       
       {/* LEFT PANE: Folder List */}
@@ -81,7 +109,8 @@ const MessageCenterInbox = ({ userRole }) => {
           <li style={{ padding: '4px', cursor: 'pointer' }}>🗑️ Deleted Mail</li>
         </ul>
         
-        {userRole === 'CLUB_ADMIN' && (
+        {/* FIXED: Case-insensitive Admin check so the button reliably appears */}
+        {isAdmin && (
           <div style={{ marginTop: '20px' }}>
             <button className="retro-button" style={{ width: '100%', fontSize: '11px' }} onClick={() => setShowNewBulletin(true)}>
               [+] Post Bulletin

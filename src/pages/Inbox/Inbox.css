@@ -1,0 +1,72 @@
+/* =========================================
+   Message Center & Inbox Styles
+   ========================================= */
+
+/* The dark background overlay that dims the screen when a modal pops up */
+.error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Classic Netscape Form Styling */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 5px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-family: 'MS Sans Serif', 'Arial', sans-serif;
+}
+
+/* The 90s Beveled Input Box */
+.retro-input {
+  padding: 4px;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080; /* Inset bevel effect */
+  background: #ffffff;
+  font-family: 'MS Sans Serif', 'Arial', sans-serif;
+  font-size: 13px;
+}
+
+.retro-input:focus {
+  outline: 1px dotted #000000;
+}
+
+/* The 90s Beveled Button */
+.retro-button {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff; /* Outset bevel effect */
+  padding: 4px 10px;
+  font-family: inherit;
+  cursor: pointer;
+  color: black;
+}
+
+/* Classic button click animation (moves text down and right) */
+.retro-button:active {
+  border-color: #808080 #ffffff #ffffff #808080; /* Inverts to inset */
+  padding: 5px 9px 3px 11px; 
+}
+
+/* Modal action buttons alignment */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}

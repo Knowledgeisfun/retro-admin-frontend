@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import RetroWindow from './RetroWindow';
-import './Dashboard.css';
-import './Login.css';
+import RetroWindow from '../../components/RetroUI/RetroWindow';
+import { API_BASE_URL } from '../../config/api'; 
+import './Hierarchy.css'; // Make sure you renamed Dashboard.css to Hierarchy.css!
 
-const AdminDashboard = ({ userRole }) => {
+const TeamHierarchy = ({ userRole }) => {
   const [users, setUsers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
@@ -16,9 +16,22 @@ const AdminDashboard = ({ userRole }) => {
   const [newEmail, setNewEmail] = useState('');
   const [newTeamName, setNewTeamName] = useState('');
 
+  // ==========================================
+  // STATES: EDITING & REMOVING
+  // ==========================================
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    fullName: '',
+    registrationNumber: '',
+    email: '',
+    role: '',
+    teamId: ''
+  });
+
   // Extract user info from token to check team assignment
   const getUserDataFromToken = () => {
-    const token = localStorage.getItem('jwt_token');
+    // FIX: Changed 'jwt_token' to 'token' (or whatever key your login saves it under)
+    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
     if (!token) return {};
     try {
       const base64Url = token.split('.')[1];
@@ -34,7 +47,7 @@ const AdminDashboard = ({ userRole }) => {
 
   const userData = getUserDataFromToken();
   const currentUserName = userData.username || userData.name || userData.sub || 'User';
-  const userTeamId = userData.teamId; // Dynamically pulled from your backend JWT!
+  const userTeamId = userData.teamId; 
   const isAdmin = (userRole || '').toUpperCase().includes('ADMIN');
 
   useEffect(() => {
@@ -42,7 +55,7 @@ const AdminDashboard = ({ userRole }) => {
     fetchTeams();
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     if (teams.length > 0 && selectedTeamId === null) {
       if (!isAdmin && userTeamId) {
         setSelectedTeamId(userTeamId);
@@ -54,16 +67,18 @@ useEffect(() => {
   }, [teams, userTeamId]);
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('jwt_token');
+    // Make sure it looks for 'token' first!
+    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'bypass-tunnel-reminder': 'true' 
     };
   };
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/users', {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: 'GET',
         headers: getAuthHeader()
       });
@@ -78,7 +93,7 @@ useEffect(() => {
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/teams', {
+      const response = await fetch(`${API_BASE_URL}/teams`, {
         method: 'GET',
         headers: getAuthHeader()
       });
@@ -91,10 +106,13 @@ useEffect(() => {
     }
   };
 
+  // ==========================================
+  // API: ADD/CREATE
+  // ==========================================
   const handleAddMember = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8080/api/users/register', {
+      const response = await fetch(`${API_BASE_URL}/users/register`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: JSON.stringify({
@@ -121,7 +139,7 @@ useEffect(() => {
   const handleAddTeam = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8080/api/teams', {
+      const response = await fetch(`${API_BASE_URL}/teams`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: JSON.stringify({ teamName: newTeamName })
@@ -137,18 +155,92 @@ useEffect(() => {
     }
   };
 
-  // Filter teams visible in the sidebar tree
-// Filter teams visible in the sidebar tree dynamically
+  // ==========================================
+  // API: EDIT & REMOVE
+  // ==========================================
+  const handleDeleteMember = async (userId) => {
+    if (!window.confirm("WARNING: Are you sure you want to remove this member from the directory?")) {
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'DELETE',
+        headers: getAuthHeader() 
+      });
+
+      if (response.ok) {
+        alert("Member successfully removed.");
+        fetchUsers(); 
+      } else {
+        alert("System Error: Failed to execute removal.");
+      }
+    } catch (error) {
+      console.error("Deletion failed:", error);
+    }
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Clean the payload: Ensure teamId is a strict number, not a string
+      const payload = {
+        ...editFormData,
+        teamId: editFormData.teamId ? parseInt(editFormData.teamId, 10) : null
+      };
+
+      const response = await fetch(`${API_BASE_URL}/users/${editingUserId}`, {
+        method: 'PUT',
+        headers: getAuthHeader(),
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        alert("Directory updated successfully.");
+        setEditingUserId(null); 
+        fetchUsers();
+      } else {
+        // Extract the exact error from Spring Boot
+        const errorText = await response.text();
+        alert(`System Error: Update rejected.\n\nStatus Code: ${response.status}\nBackend Details: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Update failed:", error);
+      alert("Network Error: Could not connect to the server.");
+    }
+  };
+
+  const handleEditClick = (user) => {
+    setEditingUserId(user.userId || user.id);
+    
+    // Get raw role from database
+    let rawRole = user.role?.roleName || user.role || 'ROLE_MEMBER';
+    rawRole = rawRole.toUpperCase();
+    
+    // Safely map it to exactly what the dropdown options expect
+    let formRole = 'ROLE_MEMBER';
+    if (rawRole.includes('CO')) formRole = 'ROLE_CO_LEAD';
+    else if (rawRole.includes('LEAD')) formRole = 'ROLE_TEAM_LEAD';
+
+    setEditFormData({
+      fullName: user.userName || user.username || user.name || '', 
+      registrationNumber: user.registrationNumber || '',
+      email: user.email || '',
+      role: formRole, // Uses the safely mapped role
+      teamId: user.team?.teamId || user.teamId || selectedTeamId
+    });
+  };
+
+  // ==========================================
+  // FILTERING LOGIC
+  // ==========================================
   const filteredTeams = Array.isArray(teams) ? teams.filter(t => {
     if (isAdmin) return true;
     const tId = t.id || t.teamId;
-    return tId === userTeamId; // Automatically matches their assigned team ID!
+    return tId === userTeamId; 
   }) : [];
 
-  // Declare selectedTeamObj BEFORE filteredUsers so it's initialized in scope
   const selectedTeamObj = teams.find(t => (t.id || t.teamId) === selectedTeamId);
 
-  // Robust filtering for users matching the selected team folder
   const filteredUsers = Array.isArray(users) 
     ? users.filter(u => {
         const uTeamId = u.teamId;
@@ -171,6 +263,52 @@ useEffect(() => {
     (a.username || a.name || '').localeCompare(b.username || b.name || '')
   );
 
+  // ==========================================
+  // REUSABLE UI: USER ROW COMPONENT
+  // ==========================================
+  const renderUserRow = (user, icon, bgColor) => {
+    const uId = user.userId || user.id;
+    const uName = user.userName || user.username || user.name;
+    const isEditing = editingUserId === uId;
+
+    if (isEditing) {
+      return (
+        <form key={uId} onSubmit={handleUpdateSubmit} style={{ display: 'flex', gap: '5px', alignItems: 'center', background: '#e0e0e0', padding: '5px', border: '1px solid #888', marginBottom: '4px' }}>
+          <input type="text" className="retro-input" value={editFormData.fullName} onChange={(e) => setEditFormData({...editFormData, fullName: e.target.value})} placeholder="Name" required style={{ width: '100px', fontSize: '11px', padding: '2px' }}/>
+          <input type="text" className="retro-input" value={editFormData.registrationNumber} onChange={(e) => setEditFormData({...editFormData, registrationNumber: e.target.value})} placeholder="Reg No." required style={{ width: '90px', fontSize: '11px', padding: '2px' }}/>
+          <select 
+  className="retro-input" 
+  value={editFormData.role} 
+  onChange={(e) => setEditFormData({...editFormData, role: e.target.value})} 
+  style={{ fontSize: '11px', padding: '2px' }}
+>
+  <option value="ROLE_MEMBER">Member</option>
+  <option value="ROLE_TEAM_LEAD">Team Lead</option>
+  <option value="ROLE_CO_LEAD">Co-Lead</option>
+</select>
+          <button type="submit" className="retro-button" style={{ padding: '2px 5px', fontSize: '11px' }}>[ Save ]</button>
+          <button type="button" className="retro-button" onClick={() => setEditingUserId(null)} style={{ padding: '2px 5px', fontSize: '11px' }}>[ Cancel ]</button>
+        </form>
+      );
+    }
+
+    return (
+      <div key={uId} style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', background: bgColor, marginBottom: '4px', border: '1px solid #d0d0d0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '16px' }}>{icon}</span>
+          <span style={{ fontWeight: 'bold', color: '#000' }}>{uName}</span>
+          <span style={{ color: '#444', fontSize: '12px' }}>({user.registrationNumber})</span>
+        </div>
+        {isAdmin && (
+          <div style={{ display: 'flex', gap: '8px', fontSize: '12px' }}>
+            <span onClick={() => handleEditClick(user)} style={{ cursor: 'pointer', color: '#000080', fontWeight: 'bold' }}>[ Edit ]</span>
+            <span onClick={() => handleDeleteMember(uId)} style={{ cursor: 'pointer', color: 'darkred', fontWeight: 'bold' }}>[ Remove ]</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="dashboard-content" style={{ display: 'flex', gap: '10px', padding: '10px', height: '100%', overflow: 'hidden' }}>
       
@@ -189,15 +327,9 @@ useEffect(() => {
                 key={tId} 
                 onClick={() => setSelectedTeamId(tId)}
                 style={{
-                  padding: '6px 8px',
-                  cursor: 'pointer',
-                  background: isSelected ? '#000080' : 'transparent',
-                  color: isSelected ? 'white' : 'black',
-                  fontWeight: isSelected ? 'bold' : 'normal',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  marginBottom: '2px'
+                  padding: '6px 8px', cursor: 'pointer', background: isSelected ? '#000080' : 'transparent',
+                  color: isSelected ? 'white' : 'black', fontWeight: isSelected ? 'bold' : 'normal',
+                  display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px'
                 }}
               >
                 📁 {tName}
@@ -233,17 +365,7 @@ useEffect(() => {
               <div style={{ fontWeight: 'bold', color: '#000080', fontSize: '13px', marginBottom: '8px', borderBottom: '1px solid #000080', paddingBottom: '3px' }}>
                 ★ TEAM LEAD
               </div>
-              {sortedLeads.map(user => {
-                const uId = user.userId || user.id;
-                const uName = user.userName || user.username || user.name;
-                return (
-                  <div key={uId} style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', background: '#eef2f7', marginBottom: '4px', border: '1px solid #d0d0d0' }}>
-                    <span style={{ fontSize: '16px' }}>⭐</span>
-                    <span style={{ fontWeight: 'bold', color: '#000' }}>{uName}</span>
-                    <span style={{ color: '#444', fontSize: '12px' }}>({user.registrationNumber})</span>
-                  </div>
-                );
-              })}
+              {sortedLeads.map(user => renderUserRow(user, '⭐', '#eef2f7'))}
             </div>
           )}
 
@@ -253,17 +375,7 @@ useEffect(() => {
               <div style={{ fontWeight: 'bold', color: '#000080', fontSize: '13px', marginBottom: '8px', borderBottom: '1px solid #000080', paddingBottom: '3px' }}>
                 ⭐ CO-LEAD
               </div>
-              {sortedCoLeads.map(user => {
-                const uId = user.userId || user.id;
-                const uName = user.userName || user.username || user.name;
-                return (
-                  <div key={uId} style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', background: '#f4f6f9', marginBottom: '4px', border: '1px solid #d0d0d0' }}>
-                    <span style={{ fontSize: '16px' }}>⭐</span>
-                    <span style={{ fontWeight: 'bold', color: '#000' }}>{uName}</span>
-                    <span style={{ color: '#444', fontSize: '12px' }}>({user.registrationNumber})</span>
-                  </div>
-                );
-              })}
+              {sortedCoLeads.map(user => renderUserRow(user, '⭐', '#f4f6f9'))}
             </div>
           )}
 
@@ -273,17 +385,7 @@ useEffect(() => {
               📂 MEMBERS ({sortedMembers.length})
             </div>
             {sortedMembers.length > 0 ? (
-              sortedMembers.map(user => {
-                const uId = user.userId || user.id;
-                const uName = user.userName || user.username || user.name;
-                return (
-                  <div key={uId} style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', borderBottom: '1px dotted #e0e0e0', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '14px' }}>👤</span>
-                    <span style={{ color: '#111', fontWeight: '500' }}>{uName}</span>
-                    <span style={{ color: '#666', fontSize: '12px' }}>({user.registrationNumber})</span>
-                  </div>
-                );
-              })
+              sortedMembers.map(user => renderUserRow(user, '👤', 'transparent'))
             ) : (
               <div style={{ color: '#888', fontStyle: 'italic', fontSize: '12px', padding: '5px' }}>No general members in this unit.</div>
             )}
@@ -340,4 +442,4 @@ useEffect(() => {
   );
 };
 
-export default AdminDashboard;
+export default TeamHierarchy;

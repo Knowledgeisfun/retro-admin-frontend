@@ -1,0 +1,41 @@
+/* =========================================
+   Chat Messenger Specific Styles
+   ========================================= */
+
+.chat-container {
+  /* Inherits from dashboard-content but ensures it fills the frame */
+  padding: 15px;
+  background: #ffffff; 
+  flex-grow: 1;
+  border: inset 2px #808080;
+  margin: 5px;
+}
+
+/* Fallback for retro UI elements if not loaded globally */
+.retro-input {
+  padding: 4px;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080; 
+  background: #ffffff;
+  font-family: 'MS Sans Serif', 'Arial', sans-serif;
+  font-size: 13px;
+}
+
+.retro-input:focus {
+  outline: 1px dotted #000000;
+}
+
+.retro-button {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff; 
+  padding: 4px 10px;
+  font-family: inherit;
+  cursor: pointer;
+  color: black;
+}
+
+.retro-button:active {
+  border-color: #808080 #ffffff #ffffff #808080; 
+  padding: 5px 9px 3px 11px; 
+}

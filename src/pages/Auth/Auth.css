@@ -1,0 +1,41 @@
+/* =========================================
+   Auth & Login Styles
+   ========================================= */
+
+.error-dialog-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  font-family: 'MS Sans Serif', 'Arial', sans-serif;
+  font-size: 13px;
+  background-color: #ffffff;
+  border: inset 2px #808080;
+}
+
+.error-icon {
+  font-size: 32px;
+}
+
+/* If you haven't moved these to a global RetroWindow.css yet, keep them here: */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 5px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-family: 'MS Sans Serif', 'Arial', sans-serif;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}

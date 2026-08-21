@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import RetroWindow from './RetroWindow'; // 1. We must import the window component!
-import './Login.css'; 
+import RetroWindow from '../../components/RetroUI/RetroWindow'; 
+import { API_BASE_URL } from '../../config/api'; 
+import './Auth.css';
 
 const ForcePasswordChange = ({ onPasswordChanged }) => {
   const [newPassword, setNewPassword] = useState('');
@@ -11,7 +12,6 @@ const ForcePasswordChange = ({ onPasswordChanged }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Custom validation
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match, user!');
       return;
@@ -26,21 +26,25 @@ const ForcePasswordChange = ({ onPasswordChanged }) => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('jwt_token');
+      // Pull token using standardized keys
+      const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
       
-      const response = await fetch('http://localhost:8080/api/users/change-password', {
-        method: 'PUT', // Updated method
+      // FIXED: Changed method from 'POST' to 'PUT' to match AuthController mapping
+      const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+        method: 'PUT', 
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`, 
+          'bypass-tunnel-reminder': 'true' 
         },
-        body: JSON.stringify({ newPassword: newPassword }), // Matches your API DTO
+        body: JSON.stringify({ newPassword: newPassword }) 
       });
 
       if (response.ok) {
         onPasswordChanged(); 
       } else {
-        setError('System Error: Could not update password.');
+        const errText = await response.text();
+        setError(`System Error: Could not update password. (${errText})`);
       }
     } catch (err) {
       setError('Network Error: Cannot reach server.');
@@ -85,7 +89,6 @@ const ForcePasswordChange = ({ onPasswordChanged }) => {
         </div>
       </form>
 
-      {/* 2. Here is the custom Retro Error Dialog Popup! */}
       {error && (
         <div className="error-overlay">
           <RetroWindow title="System Error" width="260px">

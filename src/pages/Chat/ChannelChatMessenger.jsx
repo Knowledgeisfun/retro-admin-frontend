@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import RetroWindow from './RetroWindow';
-import './Dashboard.css';
-import './Login.css';
+import { API_BASE_URL } from '../../config/api'; 
+import './Chat.css'; // <-- Updated CSS import!
 
 const ChannelChatMessenger = ({ userRole }) => {
   const [channels, setChannels] = useState([]);
@@ -9,8 +8,9 @@ const ChannelChatMessenger = ({ userRole }) => {
   const [messages, setMessages] = useState([]);
   const [newMessageText, setNewMessageText] = useState('');
 
-  const getUserDataFromToken = () => {
-    const token = localStorage.getItem('jwt_token');
+const getUserDataFromToken = () => {
+    // FIXED: Support multiple token storage keys
+    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
     if (!token) return {};
     try {
       const base64Url = token.split('.')[1];
@@ -25,7 +25,7 @@ const ChannelChatMessenger = ({ userRole }) => {
   };
 
   const userData = getUserDataFromToken();
-  const userTeamId = userData.teamId; // Dynamically pulled from backend JWT token
+  const userTeamId = userData.teamId; 
   const isAdmin = (userRole || '').toUpperCase().includes('ADMIN');
   const isLeadOrCo = (userRole || '').toUpperCase().includes('LEAD') || (userRole || '').toUpperCase().includes('CO');
 
@@ -46,24 +46,24 @@ const ChannelChatMessenger = ({ userRole }) => {
   }, [selectedChannel]);
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('jwt_token');
+    // Make sure it looks for 'token' first!
+    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'bypass-tunnel-reminder': 'true' 
     };
   };
 
   const loadChatRooms = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/channels', {
+      const response = await fetch(`${API_BASE_URL}/channels`, {
         method: 'GET',
         headers: getAuthHeader()
       });
 
       if (response.ok) {
         const data = await response.json();
-        
-        // Keep all channels and let canAccessChannel handle permissions
         setChannels(data);
         
         const allowedChannels = data.filter(ch => canAccessChannel(ch));
@@ -80,7 +80,7 @@ const ChannelChatMessenger = ({ userRole }) => {
 
   const fetchMessages = async (channelId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/channels/${channelId}/messages`, {
+      const response = await fetch(`${API_BASE_URL}/channels/${channelId}/messages`, {
         method: 'GET',
         headers: getAuthHeader()
       });
@@ -103,7 +103,7 @@ const ChannelChatMessenger = ({ userRole }) => {
 
     const channelId = selectedChannel.channelId || selectedChannel.id;
     try {
-      const response = await fetch(`http://localhost:8080/api/channels/${channelId}/messages`, {
+      const response = await fetch(`${API_BASE_URL}/channels/${channelId}/messages`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: JSON.stringify({ content: newMessageText })
@@ -121,23 +121,20 @@ const ChannelChatMessenger = ({ userRole }) => {
     }
   };
 
-const canAccessChannel = (ch) => {
+  const canAccessChannel = (ch) => {
     if (isAdmin) return true;
 
     const type = (ch.channelType || ch.type || '').toLowerCase();
     const chName = (ch.channelName || ch.name || '').toLowerCase();
 
-    // 1. Block global channels completely for non-admins
     if (type === 'global' || chName.includes('global') || chName.includes('announcement')) {
       return false; 
     }
 
-    // 2. Restrict leadership channels strictly to leads or co-leads
     if (type.includes('leadership') || chName.includes('leadership')) {
       return isLeadOrCo;
     }
 
-    // 3. Match channel team association dynamically via teamId
     const chTeamId = ch.teamId || (ch.team ? (ch.team.teamId || ch.team.id) : null);
     if (userTeamId && chTeamId) {
       return chTeamId === userTeamId;
@@ -161,7 +158,7 @@ const canAccessChannel = (ch) => {
   };
 
   return (
-    <div className="dashboard-content" style={{ display: 'flex', gap: '8px', padding: '10px', height: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
+    <div className="dashboard-content chat-container" style={{ display: 'flex', gap: '8px', padding: '10px', height: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
       
       {/* LEFT PANE: Active Rooms */}
       <div style={{ width: '220px', background: 'white', border: '2px inset #dfdfdf', padding: '8px', fontSize: '12px', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
