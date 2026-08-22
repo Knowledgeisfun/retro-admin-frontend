@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RetroWindow from '../../components/RetroUI/RetroWindow';
-import { API_BASE_URL } from '../../config/api'; 
+import { apiClient } from '../../config/client'; // <-- IMPORT THE CENTRAL CLIENT
 import './Inbox.css';
 
 const MessageCenterInbox = ({ userRole }) => {
@@ -10,7 +10,7 @@ const MessageCenterInbox = ({ userRole }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  // Streamlined to use the standardized 'token' key
+  // Extract user info for UI/Filtering purposes (Decoding only, no fetching here)
   const getUserDataFromToken = () => {
     const token = localStorage.getItem('token');
     if (!token) return {};
@@ -34,21 +34,14 @@ const MessageCenterInbox = ({ userRole }) => {
     fetchAnnouncements();
   }, []);
 
-  const getAuthHeader = () => {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      'bypass-tunnel-reminder': 'true' 
-    };
-  };
-
+  // ==========================================
+  // API: CLEANED UP WITH apiClient!
+  // ==========================================
   const fetchAnnouncements = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/announcements`, {
-        method: 'GET',
-        headers: getAuthHeader()
-      });
+      // Automatic GET request with headers injected by apiClient
+      const response = await apiClient('/announcements');
+      
       if (response.ok) {
         const data = await response.json();
         setAnnouncements(data);
@@ -74,11 +67,11 @@ const MessageCenterInbox = ({ userRole }) => {
   const handlePostAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_BASE_URL}/announcements`, {
+      const response = await apiClient('/announcements', {
         method: 'POST',
-        headers: getAuthHeader(),
         body: JSON.stringify({ title, content, pinned: true })
       });
+      
       if (response.ok) {
         setShowNewBulletin(false);
         setTitle('');

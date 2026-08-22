@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../../config/api'; 
-import './Chat.css'; // <-- Updated CSS import!
+import { apiClient } from '../../config/client'; // <-- IMPORT THE CENTRAL CLIENT
+import './Chat.css'; 
 
 const ChannelChatMessenger = ({ userRole }) => {
   const [channels, setChannels] = useState([]);
@@ -8,8 +8,8 @@ const ChannelChatMessenger = ({ userRole }) => {
   const [messages, setMessages] = useState([]);
   const [newMessageText, setNewMessageText] = useState('');
 
+  // Extract user info for UI/Filtering purposes (Decoding only, no fetching here)
   const getUserDataFromToken = () => {
-    // Streamlined to use the standardized 'token' key
     const token = localStorage.getItem('token');
     if (!token) return {};
     try {
@@ -45,22 +45,13 @@ const ChannelChatMessenger = ({ userRole }) => {
     return () => clearInterval(interval);
   }, [selectedChannel]);
 
-  const getAuthHeader = () => {
-    // Streamlined to use the standardized 'token' key
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      'bypass-tunnel-reminder': 'true' 
-    };
-  };
-
+  // ==========================================
+  // API: CLEANED UP WITH apiClient!
+  // ==========================================
   const loadChatRooms = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/channels`, {
-        method: 'GET',
-        headers: getAuthHeader()
-      });
+      // Automatic GET request with headers injected by apiClient
+      const response = await apiClient('/channels');
 
       if (response.ok) {
         const data = await response.json();
@@ -80,10 +71,8 @@ const ChannelChatMessenger = ({ userRole }) => {
 
   const fetchMessages = async (channelId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/channels/${channelId}/messages`, {
-        method: 'GET',
-        headers: getAuthHeader()
-      });
+      const response = await apiClient(`/channels/${channelId}/messages`);
+      
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
@@ -103,9 +92,8 @@ const ChannelChatMessenger = ({ userRole }) => {
 
     const channelId = selectedChannel.channelId || selectedChannel.id;
     try {
-      const response = await fetch(`${API_BASE_URL}/channels/${channelId}/messages`, {
+      const response = await apiClient(`/channels/${channelId}/messages`, {
         method: 'POST',
-        headers: getAuthHeader(),
         body: JSON.stringify({ content: newMessageText })
       });
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import RetroWindow from '../../components/RetroUI/RetroWindow'; 
-import { API_BASE_URL } from '../../config/api'; 
+import { apiClient } from '../../config/client'; // <-- IMPORT THE CENTRAL CLIENT
 import './Auth.css';
 
 const ForcePasswordChange = ({ onPasswordChanged }) => {
@@ -26,16 +26,9 @@ const ForcePasswordChange = ({ onPasswordChanged }) => {
     setIsLoading(true);
 
     try {
-      // Streamlined to use the standardized 'token' key
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      // API call simplified! Headers and token are automatically attached by apiClient
+      const response = await apiClient('/auth/change-password', {
         method: 'PUT', 
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, 
-          'bypass-tunnel-reminder': 'true' 
-        },
         body: JSON.stringify({ newPassword: newPassword }) 
       });
 

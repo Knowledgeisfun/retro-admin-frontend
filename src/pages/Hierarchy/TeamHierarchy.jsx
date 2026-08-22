@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import RetroWindow from '../../components/RetroUI/RetroWindow';
-import { API_BASE_URL } from '../../config/api'; 
-import './Hierarchy.css'; // Make sure you renamed Dashboard.css to Hierarchy.css!
+import { apiClient } from '../../config/client'; // <-- IMPORT THE CENTRAL CLIENT
+import './Hierarchy.css'; 
 
 const TeamHierarchy = ({ userRole }) => {
   const [users, setUsers] = useState([]);
@@ -28,9 +28,8 @@ const TeamHierarchy = ({ userRole }) => {
     teamId: ''
   });
 
-  // Extract user info from token to check team assignment
+  // Extract user info from token to check team assignment (Decoding only, not for fetching)
   const getUserDataFromToken = () => {
-    // Streamlined to use the standardized 'token' key
     const token = localStorage.getItem('token');
     if (!token) return {};
     try {
@@ -66,22 +65,12 @@ const TeamHierarchy = ({ userRole }) => {
     }
   }, [teams, userTeamId]);
 
-  const getAuthHeader = () => {
-    // Streamlined to use the standardized 'token' key
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      'bypass-tunnel-reminder': 'true' 
-    };
-  };
-
+  // ==========================================
+  // API: CLEANED UP WITH apiClient!
+  // ==========================================
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'GET',
-        headers: getAuthHeader()
-      });
+      const response = await apiClient('/users');
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -93,10 +82,7 @@ const TeamHierarchy = ({ userRole }) => {
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams`, {
-        method: 'GET',
-        headers: getAuthHeader()
-      });
+      const response = await apiClient('/teams');
       if (response.ok) {
         const data = await response.json();
         setTeams(data);
@@ -106,15 +92,11 @@ const TeamHierarchy = ({ userRole }) => {
     }
   };
 
-  // ==========================================
-  // API: ADD/CREATE
-  // ==========================================
   const handleAddMember = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_BASE_URL}/users/register`, {
+      const response = await apiClient('/users/register', {
         method: 'POST',
-        headers: getAuthHeader(),
         body: JSON.stringify({
           username: newUsername,
           email: newEmail,
@@ -139,9 +121,8 @@ const TeamHierarchy = ({ userRole }) => {
   const handleAddTeam = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_BASE_URL}/teams`, {
+      const response = await apiClient('/teams', {
         method: 'POST',
-        headers: getAuthHeader(),
         body: JSON.stringify({ teamName: newTeamName })
       });
 
@@ -155,17 +136,13 @@ const TeamHierarchy = ({ userRole }) => {
     }
   };
 
-  // ==========================================
-  // API: EDIT & REMOVE
-  // ==========================================
   const handleDeleteMember = async (userId) => {
     if (!window.confirm("WARNING: Are you sure you want to remove this member from the directory?")) {
       return;
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-        method: 'DELETE',
-        headers: getAuthHeader() 
+      const response = await apiClient(`/users/${userId}`, {
+        method: 'DELETE'
       });
 
       if (response.ok) {
@@ -182,15 +159,13 @@ const TeamHierarchy = ({ userRole }) => {
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Clean the payload: Ensure teamId is a strict number, not a string
       const payload = {
         ...editFormData,
         teamId: editFormData.teamId ? parseInt(editFormData.teamId, 10) : null
       };
 
-      const response = await fetch(`${API_BASE_URL}/users/${editingUserId}`, {
+      const response = await apiClient(`/users/${editingUserId}`, {
         method: 'PUT',
-        headers: getAuthHeader(),
         body: JSON.stringify(payload)
       });
 
@@ -199,7 +174,6 @@ const TeamHierarchy = ({ userRole }) => {
         setEditingUserId(null); 
         fetchUsers();
       } else {
-        // Extract the exact error from Spring Boot
         const errorText = await response.text();
         alert(`System Error: Update rejected.\n\nStatus Code: ${response.status}\nBackend Details: ${errorText}`);
       }
@@ -212,11 +186,9 @@ const TeamHierarchy = ({ userRole }) => {
   const handleEditClick = (user) => {
     setEditingUserId(user.userId || user.id);
     
-    // Get raw role from database
     let rawRole = user.role?.roleName || user.role || 'ROLE_MEMBER';
     rawRole = rawRole.toUpperCase();
     
-    // Safely map it to exactly what the dropdown options expect
     let formRole = 'ROLE_MEMBER';
     if (rawRole.includes('CO')) formRole = 'ROLE_CO_LEAD';
     else if (rawRole.includes('LEAD')) formRole = 'ROLE_TEAM_LEAD';
@@ -225,7 +197,7 @@ const TeamHierarchy = ({ userRole }) => {
       fullName: user.userName || user.username || user.name || '', 
       registrationNumber: user.registrationNumber || '',
       email: user.email || '',
-      role: formRole, // Uses the safely mapped role
+      role: formRole, 
       teamId: user.team?.teamId || user.teamId || selectedTeamId
     });
   };
@@ -277,15 +249,15 @@ const TeamHierarchy = ({ userRole }) => {
           <input type="text" className="retro-input" value={editFormData.fullName} onChange={(e) => setEditFormData({...editFormData, fullName: e.target.value})} placeholder="Name" required style={{ width: '100px', fontSize: '11px', padding: '2px' }}/>
           <input type="text" className="retro-input" value={editFormData.registrationNumber} onChange={(e) => setEditFormData({...editFormData, registrationNumber: e.target.value})} placeholder="Reg No." required style={{ width: '90px', fontSize: '11px', padding: '2px' }}/>
           <select 
-  className="retro-input" 
-  value={editFormData.role} 
-  onChange={(e) => setEditFormData({...editFormData, role: e.target.value})} 
-  style={{ fontSize: '11px', padding: '2px' }}
->
-  <option value="ROLE_MEMBER">Member</option>
-  <option value="ROLE_TEAM_LEAD">Team Lead</option>
-  <option value="ROLE_CO_LEAD">Co-Lead</option>
-</select>
+            className="retro-input" 
+            value={editFormData.role} 
+            onChange={(e) => setEditFormData({...editFormData, role: e.target.value})} 
+            style={{ fontSize: '11px', padding: '2px' }}
+          >
+            <option value="ROLE_MEMBER">Member</option>
+            <option value="ROLE_TEAM_LEAD">Team Lead</option>
+            <option value="ROLE_CO_LEAD">Co-Lead</option>
+          </select>
           <button type="submit" className="retro-button" style={{ padding: '2px 5px', fontSize: '11px' }}>[ Save ]</button>
           <button type="button" className="retro-button" onClick={() => setEditingUserId(null)} style={{ padding: '2px 5px', fontSize: '11px' }}>[ Cancel ]</button>
         </form>
