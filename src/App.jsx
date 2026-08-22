@@ -52,8 +52,8 @@ const getUserNameFromToken = (token) => {
 };
 
   useEffect(() => {
-    // FIX: Look for 'token' first!
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+    // Streamlined to use 'token' exclusively
+    const token = localStorage.getItem('token');
     if (token) {
       setIsAuthenticated(true);
       const rawRole = getUserRoleFromToken(token);
@@ -62,15 +62,14 @@ const getUserNameFromToken = (token) => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('token'); // Clears the correct key
     setIsAuthenticated(false);
     setMustChangePassword(false);
     setUserRole('MEMBER');
   };
 
   const handleLoginSuccess = (requiresChange) => {
-    // FIX: Look for 'token' first!
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+    const token = localStorage.getItem('token');
     setIsAuthenticated(true);
     setMustChangePassword(requiresChange);
     
@@ -94,7 +93,7 @@ const getUserNameFromToken = (token) => {
     );
   } else {
     // Get the username once to pass to the Navbar
-    const userName = getUserNameFromToken(localStorage.getItem('jwt_token'));
+    const userName = getUserNameFromToken(localStorage.getItem('token'));
 
     currentView = (
       <RetroWindow title="Netscape - [ iOS Club Manager 4.0 ]" width="950px">

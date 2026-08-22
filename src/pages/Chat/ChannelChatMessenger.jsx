@@ -8,9 +8,9 @@ const ChannelChatMessenger = ({ userRole }) => {
   const [messages, setMessages] = useState([]);
   const [newMessageText, setNewMessageText] = useState('');
 
-const getUserDataFromToken = () => {
-    // FIXED: Support multiple token storage keys
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+  const getUserDataFromToken = () => {
+    // Streamlined to use the standardized 'token' key
+    const token = localStorage.getItem('token');
     if (!token) return {};
     try {
       const base64Url = token.split('.')[1];
@@ -46,8 +46,8 @@ const getUserDataFromToken = () => {
   }, [selectedChannel]);
 
   const getAuthHeader = () => {
-    // Make sure it looks for 'token' first!
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+    // Streamlined to use the standardized 'token' key
+    const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,

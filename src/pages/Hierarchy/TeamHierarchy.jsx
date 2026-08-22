@@ -30,8 +30,8 @@ const TeamHierarchy = ({ userRole }) => {
 
   // Extract user info from token to check team assignment
   const getUserDataFromToken = () => {
-    // FIX: Changed 'jwt_token' to 'token' (or whatever key your login saves it under)
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+    // Streamlined to use the standardized 'token' key
+    const token = localStorage.getItem('token');
     if (!token) return {};
     try {
       const base64Url = token.split('.')[1];
@@ -67,8 +67,8 @@ const TeamHierarchy = ({ userRole }) => {
   }, [teams, userTeamId]);
 
   const getAuthHeader = () => {
-    // Make sure it looks for 'token' first!
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+    // Streamlined to use the standardized 'token' key
+    const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,

@@ -26,10 +26,9 @@ const ForcePasswordChange = ({ onPasswordChanged }) => {
     setIsLoading(true);
 
     try {
-      // Pull token using standardized keys
-      const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+      // Streamlined to use the standardized 'token' key
+      const token = localStorage.getItem('token');
       
-      // FIXED: Changed method from 'POST' to 'PUT' to match AuthController mapping
       const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
         method: 'PUT', 
         headers: {

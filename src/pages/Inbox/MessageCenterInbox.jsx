@@ -10,9 +10,9 @@ const MessageCenterInbox = ({ userRole }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  // Fallback token extraction to determine admin rights if prop is missing
+  // Streamlined to use the standardized 'token' key
   const getUserDataFromToken = () => {
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+    const token = localStorage.getItem('token');
     if (!token) return {};
     try {
       const base64Url = token.split('.')[1];
@@ -35,7 +35,7 @@ const MessageCenterInbox = ({ userRole }) => {
   }, []);
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('token') || localStorage.getItem('jwt_token') || localStorage.getItem('jwt');
+    const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
@@ -54,7 +54,6 @@ const MessageCenterInbox = ({ userRole }) => {
         setAnnouncements(data);
         if (data.length > 0) setSelectedMail(data[0]);
       } else {
-        // Fallback mock data if backend endpoint isn't set up yet
         loadMockAnnouncements();
       }
     } catch (error) {
@@ -109,7 +108,6 @@ const MessageCenterInbox = ({ userRole }) => {
           <li style={{ padding: '4px', cursor: 'pointer' }}>🗑️ Deleted Mail</li>
         </ul>
         
-        {/* FIXED: Case-insensitive Admin check so the button reliably appears */}
         {isAdmin && (
           <div style={{ marginTop: '20px' }}>
             <button className="retro-button" style={{ width: '100%', fontSize: '11px' }} onClick={() => setShowNewBulletin(true)}>
