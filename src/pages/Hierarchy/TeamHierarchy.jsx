@@ -183,15 +183,16 @@ const TeamHierarchy = ({ userRole }) => {
     }
   };
 
-  const handleEditClick = (user) => {
+ const handleEditClick = (user) => {
     setEditingUserId(user.userId || user.id);
     
-    let rawRole = user.role?.roleName || user.role || 'ROLE_MEMBER';
+    let rawRole = user.role?.roleName || user.role || 'MEMBER';
     rawRole = rawRole.toUpperCase();
     
-    let formRole = 'ROLE_MEMBER';
-    if (rawRole.includes('CO')) formRole = 'ROLE_CO_LEAD';
-    else if (rawRole.includes('LEAD')) formRole = 'ROLE_TEAM_LEAD';
+    // MATCH THESE TO YOUR BACKEND AppConstants!
+    let formRole = 'MEMBER';
+    if (rawRole.includes('CO')) formRole = 'CO_LEAD';
+    else if (rawRole.includes('LEAD')) formRole = 'TEAM_LEAD';
 
     setEditFormData({
       fullName: user.userName || user.username || user.name || '', 
@@ -254,9 +255,9 @@ const TeamHierarchy = ({ userRole }) => {
             onChange={(e) => setEditFormData({...editFormData, role: e.target.value})} 
             style={{ fontSize: '11px', padding: '2px' }}
           >
-            <option value="ROLE_MEMBER">Member</option>
-            <option value="ROLE_TEAM_LEAD">Team Lead</option>
-            <option value="ROLE_CO_LEAD">Co-Lead</option>
+            <option value="MEMBER">Member</option>
+            <option value="TEAM_LEAD">Team Lead</option>
+            <option value="CO_LEAD">Co-Lead</option>
           </select>
           <button type="submit" className="retro-button" style={{ padding: '2px 5px', fontSize: '11px' }}>[ Save ]</button>
           <button type="button" className="retro-button" onClick={() => setEditingUserId(null)} style={{ padding: '2px 5px', fontSize: '11px' }}>[ Cancel ]</button>
