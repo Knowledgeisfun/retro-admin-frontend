@@ -70,7 +70,12 @@ const TeamHierarchy = ({ userRole }) => {
   // ==========================================
   const fetchUsers = async () => {
     try {
-      const response = await apiClient('/users');
+      // Generate a unique millisecond timestamp
+      const timestamp = new Date().getTime(); 
+      
+      // Append it to the URL. The browser can never cache this!
+      const response = await apiClient(`/users?t=${timestamp}`);
+      
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -82,7 +87,12 @@ const TeamHierarchy = ({ userRole }) => {
 
   const fetchTeams = async () => {
     try {
-      const response = await apiClient('/teams');
+      // Generate a unique millisecond timestamp
+      const timestamp = new Date().getTime(); 
+      
+      // Append it to the URL. The browser can never cache this!
+      const response = await apiClient(`/teams?t=${timestamp}`);
+      
       if (response.ok) {
         const data = await response.json();
         setTeams(data);
